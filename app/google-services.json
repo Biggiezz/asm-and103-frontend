@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "656309744527",
+    "project_id": "asm-and103-ph63816",
+    "storage_bucket": "asm-and103-ph63816.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:656309744527:android:d13d7b59f9b36c02dc51fa",
+        "android_client_info": {
+          "package_name": "com.example.asm_and103_ph63816"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMOOIy9jI4Dl_fjKBLG705ymapSg6zbGQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
