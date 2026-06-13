@@ -1,4 +1,4 @@
-package com.example.asm_and103_ph63816;
+package com.example.asm_and103_ph63816.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,7 +11,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.asm_and103_ph63816.ui.LoginActivity;
+import com.example.asm_and103_ph63816.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -32,9 +32,9 @@ public class ProfileActivity extends AppCompatActivity {
             return insets;
         });
 
+        initUi();
         auth = FirebaseAuth.getInstance();
-        tvProfileEmail = findViewById(R.id.tvProfileEmail);
-        btnLogoutProfile = findViewById(R.id.btnLogoutProfile);
+
 
         FirebaseUser user = auth.getCurrentUser();
         if (user != null && user.getEmail() != null) {
@@ -57,5 +57,10 @@ public class ProfileActivity extends AppCompatActivity {
             dialog1.show();
 
         });
+    }
+
+    private void initUi() {
+        tvProfileEmail = findViewById(R.id.tvProfileEmail);
+        btnLogoutProfile = findViewById(R.id.btnLogoutProfile);
     }
 }

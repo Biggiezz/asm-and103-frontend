@@ -1,6 +1,7 @@
 package com.example.asm_and103_ph63816.services;
 
 import com.example.asm_and103_ph63816.model.Cart;
+import com.example.asm_and103_ph63816.model.Category;
 import com.example.asm_and103_ph63816.model.Order;
 import com.example.asm_and103_ph63816.model.Product;
 import com.example.asm_and103_ph63816.model.Response;
@@ -23,10 +24,6 @@ import retrofit2.http.Query;
 public interface ApiServices {
     @GET("productRouter/get-list-product")
     Call<Response<ArrayList<Product>>> getListProduct();
-
-    @GET("categoryRouter/get-list-category")
-    Call<Response<ArrayList<Product>>> getListCategory();
-
     @PUT("productRouter/update-product-by-id/{id}")
     Call<Response<Product>> updateProductById(@Path("id") String id, @Body Product product);
 
@@ -51,7 +48,18 @@ public interface ApiServices {
             @Part MultipartBody.Part image
     );
 
-    // Cart Endpoints
+    /// Category
+    @POST("categoryRouter/add-category")
+    Call<Response<Category>> addCategory(@Body Category category);
+
+    @PUT("categoryRouter/update-category-by-id/{id}")
+    Call<Response<Category>> updateCategoryById(@Path("id") String id, @Body Category category);
+    @GET("categoryRouter/get-list-category")
+    Call<Response<ArrayList<Category>>> getListCategory();
+    @DELETE("categoryRouter/delete-category-by-id/{id}")
+    Call<Response<Category>> deleteCategoryById(@Path("id") String id);
+
+    /// Cart Endpoints
     @POST("cartRouter/add-to-cart")
     Call<Response<Cart>> addToCart(@Body Cart cart);
 

@@ -1,8 +1,10 @@
-package com.example.asm_and103_ph63816;
+package com.example.asm_and103_ph63816.ui;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -22,6 +24,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.asm_and103_ph63816.R;
 import com.example.asm_and103_ph63816.adapter.ProductAdapter;
 import com.example.asm_and103_ph63816.handle.ItemProductHandle;
 import com.example.asm_and103_ph63816.model.Cart;
@@ -45,7 +48,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 
-public class HomePageActivity extends AppCompatActivity {
+public class ProductActivity extends AppCompatActivity {
     private ProductAdapter adapter;
     private HttpRequest httpRequest;
     private RecyclerView recycleProductsAsm;
@@ -53,36 +56,43 @@ public class HomePageActivity extends AppCompatActivity {
     private FloatingActionButton fabAddProduct;
     private EditText edtSearch;
     private String imageProduct;
-    private ImageView imgSelectedProduct, imgProfile, imgCart;
+    private ImageView imgSelectedProduct, imgBack, imgCart;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable searchRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.homepage_activity);
+        setContentView(R.layout.product_activity);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
         initUi();
+
         httpRequest = new HttpRequest();
+
         loadListProduct();
-        imgProfile.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ProfileActivity.class);
-            startActivity(intent);
-        });
+
+        imgBack.setOnClickListener(v -> finish());
+
         imgCart.setOnClickListener(v -> {
             Intent intent = new Intent(this, CartActivity.class);
             startActivity(intent);
         });
+
         fabAddProduct.setOnClickListener(v -> {
             imageProduct = null;
             View view = LayoutInflater.from(this)
                     .inflate(R.layout.activity_product_detail, null);
+
             AlertDialog dialog = new AlertDialog.Builder(this)
                     .setView(view)
                     .create();
+
             ImageView imgProduct = view.findViewById(R.id.imgProduct);
             TextInputEditText edtProductName = view.findViewById(R.id.edtProductName);
             TextInputEditText edtVolume = view.findViewById(R.id.edtProductVolume);
@@ -94,6 +104,7 @@ public class HomePageActivity extends AppCompatActivity {
             MaterialButton btnCancel = view.findViewById(R.id.btnCancelProduct);
 
             imgProduct.setOnClickListener(v1 -> chooseImage(imgProduct));
+
             btnAddProduct.setOnClickListener(v1 -> {
                 String productName = edtProductName.getText().toString().trim();
                 String volume = edtVolume.getText().toString().trim();
@@ -131,14 +142,16 @@ public class HomePageActivity extends AppCompatActivity {
                     Toast.makeText(this, "Không đọc được ảnh đã chọn", Toast.LENGTH_LONG).show();
                 }
             });
+
             btnCancel.setOnClickListener(v1 -> dialog.dismiss());
+
             dialog.show();
         });
     }
 
 
     private void initUi() {
-        imgProfile = findViewById(R.id.imgProfile);
+        imgBack = findViewById(R.id.imgBack);
         imgCart = findViewById(R.id.imgCart);
         recycleProductsAsm = findViewById(R.id.recyleView);
         fabAddProduct = findViewById(R.id.fabAddProduct);
@@ -166,16 +179,40 @@ public class HomePageActivity extends AppCompatActivity {
 
         edtSearch.addTextChangedListener(new TextWatcher() {
             @Override
+            public void afterTextChanged(Editable s) {
+            }
+
+            @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                adapter.filter(s.toString());
-            }
+                String key = s.toString().trim();
 
-            @Override
-            public void afterTextChanged(Editable s) {
+                Log.d("SEARCH_KEY", "Dang nhap: " + key);
+
+                if (searchRunnable != null) {
+                    handler.removeCallbacks(searchRunnable);
+                }
+
+                searchRunnable = () -> {
+                    if (key.isEmpty()) {
+                        Log.d("SEARCH_API", "Lay lai danh sach ban dau");
+
+                        httpRequest.callAPI()
+                                .getListProduct()
+                                .enqueue(getListProduct);
+                    } else {
+                        Log.d("SEARCH_API", "Tim kiem voi key: " + key);
+
+                        httpRequest.callAPI()
+                                .searchProduct(key)
+                                .enqueue(getListProduct);
+                    }
+                };
+
+                handler.postDelayed(searchRunnable, 500);
             }
         });
     }
@@ -187,15 +224,15 @@ public class HomePageActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<Response<Cart>> call, retrofit2.Response<Response<Cart>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getStatus() == 200) {
-                    Toast.makeText(HomePageActivity.this, "Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProductActivity.this, "Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(HomePageActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProductActivity.this, "Thêm thất bại", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<Response<Cart>> call, Throwable t) {
-                Toast.makeText(HomePageActivity.this, "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProductActivity.this, "Lỗi kết nối", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -218,8 +255,7 @@ public class HomePageActivity extends AppCompatActivity {
 
     private void showUpdateDialog(Product product) {
         imageProduct = product.getImage();
-        View view = LayoutInflater.from(this)
-                .inflate(R.layout.activity_product_detail, null);
+        View view = LayoutInflater.from(this).inflate(R.layout.activity_product_detail, null);
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(view)
                 .create();
@@ -345,40 +381,40 @@ public class HomePageActivity extends AppCompatActivity {
         @Override
         public void onResponse(Call<Response<Product>> call, retrofit2.Response<Response<Product>> response) {
             if (!response.isSuccessful() || response.body() == null) {
-                Toast.makeText(HomePageActivity.this, "Cập nhật thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Cập nhật thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
                 return;
             }
             if (response.body().getStatus() == 200) {
-                Toast.makeText(HomePageActivity.this, "Cập nhật thành công", Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Cập nhật thành công", Toast.LENGTH_LONG).show();
                 fetchProductList();
             } else {
-                Toast.makeText(HomePageActivity.this, "Cập nhật thất bại", Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Cập nhật thất bại", Toast.LENGTH_LONG).show();
             }
         }
 
         @Override
         public void onFailure(Call<Response<Product>> call, Throwable throwable) {
-            Toast.makeText(HomePageActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(ProductActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
         }
     };
     Callback<Response<Product>> addProductAPI = new Callback<Response<Product>>() {
         @Override
         public void onResponse(Call<Response<Product>> call, retrofit2.Response<Response<Product>> response) {
             if (!response.isSuccessful() || response.body() == null) {
-                Toast.makeText(HomePageActivity.this, "Thêm thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Thêm thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
                 return;
             }
             if (response.body().getStatus() == 200) {
-                Toast.makeText(HomePageActivity.this, "Thêm sản phẩm thành công", Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Thêm sản phẩm thành công", Toast.LENGTH_LONG).show();
                 fetchProductList();
             } else {
-                Toast.makeText(HomePageActivity.this, "Lỗi, Thêm sản phẩm thất bại", Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Lỗi, Thêm sản phẩm thất bại", Toast.LENGTH_LONG).show();
             }
         }
 
         @Override
         public void onFailure(Call<Response<Product>> call, Throwable throwable) {
-            Toast.makeText(HomePageActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(ProductActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
         }
     };
 
@@ -386,20 +422,20 @@ public class HomePageActivity extends AppCompatActivity {
         @Override
         public void onResponse(Call<Response<Product>> call, retrofit2.Response<Response<Product>> response) {
             if (!response.isSuccessful() || response.body() == null) {
-                Toast.makeText(HomePageActivity.this, "Xóa thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Xóa thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
                 return;
             }
             if (response.body().getStatus() == 200) {
-                Toast.makeText(HomePageActivity.this, "Xóa thành công", Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Xóa thành công", Toast.LENGTH_LONG).show();
                 fetchProductList();
             } else {
-                Toast.makeText(HomePageActivity.this, "Xóa thất bại", Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Xóa thất bại", Toast.LENGTH_LONG).show();
             }
         }
 
         @Override
         public void onFailure(Call<Response<Product>> call, Throwable throwable) {
-            Toast.makeText(HomePageActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(ProductActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
         }
     };
     private final Callback<Response<ArrayList<Product>>> getListProduct =
@@ -407,21 +443,21 @@ public class HomePageActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<Response<ArrayList<Product>>> call, retrofit2.Response<Response<ArrayList<Product>>> response) {
                     if (!response.isSuccessful() || response.body() == null) {
-                        Toast.makeText(HomePageActivity.this, "Không lấy được sản phẩm: HTTP " + response.code(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(ProductActivity.this, "Không lấy được sản phẩm: HTTP " + response.code(), Toast.LENGTH_LONG).show();
                         Log.e(">>> GetListProduct", "HTTP error: " + response.code());
                         return;
                     }
                     if (response.body().getStatus() == 200) {
                         adapter.setData(response.body().getData());
                     } else {
-                        Toast.makeText(HomePageActivity.this, response.body().getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(ProductActivity.this, response.body().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<Response<ArrayList<Product>>> call, Throwable throwable) {
                     Log.d(">>> GetListProduct", "onFailure: " + throwable.getMessage());
-                    Toast.makeText(HomePageActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(ProductActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
                 }
             };
 }

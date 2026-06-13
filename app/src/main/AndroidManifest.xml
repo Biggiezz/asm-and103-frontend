@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -17,13 +17,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Asm_and103_ph63816"
         android:usesCleartextTraffic="true"
-        tools:targetApi="31">
+        tools:targetApi="31" >
         <activity
-            android:name=".ProductDetail"
+            android:name=".ui.HomePageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.CategoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.ProductDetail"
             android:exported="false" />
         <activity
             android:name=".splash.Splash"
-            android:exported="true">
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -37,13 +43,13 @@
             android:name=".ui.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".HomePageActivity"
+            android:name=".ui.ProductActivity"
             android:exported="false" />
         <activity
-            android:name=".ProfileActivity"
+            android:name=".ui.ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".CartActivity"
+            android:name=".ui.CartActivity"
             android:exported="false" />
     </application>
 

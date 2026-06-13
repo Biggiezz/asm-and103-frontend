@@ -11,23 +11,18 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.asm_and103_ph63816.R;
+import com.example.asm_and103_ph63816.handle.CartHandle;
 import com.example.asm_and103_ph63816.model.Cart;
 import com.example.asm_and103_ph63816.utils.ProductImageUtil;
 
 import java.util.ArrayList;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
-    private Context context;
-    private ArrayList<Cart> list;
-    private CartItemListener listener;
+    private final Context context;
+    private final ArrayList<Cart> list;
+    private final CartHandle listener;
 
-    public interface CartItemListener {
-        void onIncrease(int position);
-        void onDecrease(int position);
-        void onDelete(int position);
-    }
-
-    public CartAdapter(Context context, ArrayList<Cart> list, CartItemListener listener) {
+    public CartAdapter(Context context, ArrayList<Cart> list, CartHandle listener) {
         this.context = context;
         this.list = list;
         this.listener = listener;

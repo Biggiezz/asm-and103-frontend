@@ -1,4 +1,4 @@
-package com.example.asm_and103_ph63816;
+package com.example.asm_and103_ph63816.ui;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.asm_and103_ph63816.R;
 import com.example.asm_and103_ph63816.model.Product;
 import com.example.asm_and103_ph63816.model.Response;
 import com.example.asm_and103_ph63816.services.HttpRequest;

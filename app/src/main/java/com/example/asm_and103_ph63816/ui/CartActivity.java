@@ -1,15 +1,18 @@
-package com.example.asm_and103_ph63816;
+package com.example.asm_and103_ph63816.ui;
 
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.asm_and103_ph63816.R;
 import com.example.asm_and103_ph63816.adapter.CartAdapter;
+import com.example.asm_and103_ph63816.handle.CartHandle;
 import com.example.asm_and103_ph63816.model.Cart;
 import com.example.asm_and103_ph63816.model.Order;
 import com.example.asm_and103_ph63816.model.Response;
@@ -45,12 +48,14 @@ public class CartActivity extends AppCompatActivity {
         httpRequest = new HttpRequest();
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        adapter = new CartAdapter(this, cartList, new CartAdapter.CartItemListener() {
+
+        adapter = new CartAdapter(this, cartList, new CartHandle() {
             @Override
             public void onIncrease(int position) {
                 Cart cart = cartList.get(position);
                 cart.setQuantity(cart.getQuantity() + 1);
                 updateQuantity(cart);
+
             }
 
             @Override
@@ -65,6 +70,7 @@ public class CartActivity extends AppCompatActivity {
             @Override
             public void onDelete(int position) {
                 deleteCartItem(cartList.get(position).get_id());
+
             }
         });
 
@@ -72,7 +78,7 @@ public class CartActivity extends AppCompatActivity {
         rcvCart.setAdapter(adapter);
 
         btnOrder.setOnClickListener(v -> placeOrder());
-
+        imgBack.setOnClickListener(v -> finish());
         loadCart();
     }
 
@@ -86,7 +92,7 @@ public class CartActivity extends AppCompatActivity {
     private void loadCart() {
         httpRequest.callAPI().getCart(userId).enqueue(new Callback<Response<ArrayList<Cart>>>() {
             @Override
-            public void onResponse(Call<Response<ArrayList<Cart>>> call, retrofit2.Response<Response<ArrayList<Cart>>> response) {
+            public void onResponse(@NonNull Call<Response<ArrayList<Cart>>> call, @NonNull retrofit2.Response<Response<ArrayList<Cart>>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getStatus() == 200) {
                     cartList.clear();
                     cartList.addAll(response.body().getData());

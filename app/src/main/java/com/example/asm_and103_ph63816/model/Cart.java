@@ -5,7 +5,7 @@ public class Cart {
     private String userId;
     private String productId;
     private int quantity;
-    private Product product; // Optional: to hold product details for UI
+    private Product product;
 
     public Cart() {
     }

@@ -19,9 +19,8 @@ import java.util.ArrayList;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
     private final ArrayList<Product> list;
-    private final ArrayList<Product> listOld = new ArrayList<>();
-    private ItemProductHandle itemProductHandle;
-    private Context context;
+    private final ItemProductHandle itemProductHandle;
+    private final Context context;
 
     public ProductAdapter(Context context, ArrayList<Product> list, ItemProductHandle itemProductHandle) {
         this.context = context;
@@ -31,10 +30,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
     public void setData(ArrayList<Product> data) {
         list.clear();
-        listOld.clear();
         if (data != null) {
             list.addAll(data);
-            listOld.addAll(data);
         }
         notifyDataSetChanged();
     }
@@ -70,21 +67,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         holder.imgAddToCart.setOnClickListener(v -> {
             itemProductHandle.onAddToCart(holder.getAdapterPosition());
         });
-    }
-
-    public void filter(String keyword) {
-        list.clear();
-        if (keyword.isEmpty()) {
-            list.addAll(listOld);
-        } else {
-            String searchKey = keyword.toLowerCase().trim();
-            for (Product product : listOld) {
-                if (product.getName().toLowerCase().contains(searchKey)) {
-                    list.add(product);
-                }
-            }
-        }
-        notifyDataSetChanged();
     }
 
     @Override
