@@ -63,6 +63,8 @@ public class ProductActivity extends AppCompatActivity {
     private ImageView imgSelectedProduct, imgBack, imgCart;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
+    String keyword = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -199,7 +201,7 @@ public class ProductActivity extends AppCompatActivity {
         recycleProductsAsm.setLayoutManager(new LinearLayoutManager(this));
         recycleProductsAsm.setAdapter(adapter);
 
-        edtSearch.addTextChangedListener(new TextWatcher() {
+        TextWatcher filterTextWatcher = new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
             }
@@ -210,33 +212,32 @@ public class ProductActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String key = s.toString().trim();
-
-                Log.d("SEARCH_KEY", "Dang nhap: " + key);
-
+                keyword = edtSearch.getText().toString().trim();
                 if (searchRunnable != null) {
                     handler.removeCallbacks(searchRunnable);
                 }
 
                 searchRunnable = () -> {
-                    if (key.isEmpty()) {
+                    if (keyword.isEmpty()) {
                         Log.d("SEARCH_API", "Lay lai danh sach ban dau");
 
                         httpRequest.callAPI()
                                 .getListProduct()
                                 .enqueue(getListProduct);
                     } else {
-                        Log.d("SEARCH_API", "Tim kiem voi key: " + key);
+                        Log.d("SEARCH_API", "Tim kiem voi key: " + keyword);
 
                         httpRequest.callAPI()
-                                .searchProduct(key)
+                                .searchProduct(keyword)
                                 .enqueue(getListProduct);
                     }
                 };
 
                 handler.postDelayed(searchRunnable, 500);
+
             }
-        });
+        };
+        edtSearch.addTextChangedListener(filterTextWatcher);
     }
 
     private void loadListCategory() {
@@ -509,6 +510,8 @@ public class ProductActivity extends AppCompatActivity {
             new Callback<Response<ArrayList<Product>>>() {
                 @Override
                 public void onResponse(Call<Response<ArrayList<Product>>> call, retrofit2.Response<Response<ArrayList<Product>>> response) {
+                    Log.d("PRODUCT_API", "code: " + response.code());
+                    Log.d("PRODUCT_API", "body: " + response.body());
                     if (response.isSuccessful() && response.body().getStatus() == 200) {
                         adapter.setData(response.body().getData());
                     } else {

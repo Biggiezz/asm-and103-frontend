@@ -62,6 +62,7 @@
             android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="16dp"
             android:hint="Tìm kiếm sản phẩm"
+            android:imeOptions="actionSearch"
             android:padding="12dp" />
 
         <androidx.recyclerview.widget.RecyclerView

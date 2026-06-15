@@ -30,8 +30,8 @@ public interface ApiServices {
     @DELETE("productRouter/delete-product-by-id/{id}")
     Call<Response<Product>> deleteProductById(@Path("id") String id);
 
-    @POST("productRouter/search-product")
-    Call<Response<ArrayList<Product>>> searchProduct(@Query("name") String name);
+    @GET("productRouter/search-product")
+    Call<Response<ArrayList<Product>>> searchProduct(@Query("key") String name);
 
     @POST("productRouter/add-product")
     Call<Response<Product>> addProduct(@Body Product product);
