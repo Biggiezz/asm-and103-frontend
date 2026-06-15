@@ -51,6 +51,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         holder.tvProductVolume.setText("Khối lượng: " + product.getVolume() + " kg");
         holder.tvProductPrice.setText("Giá tiền: " + product.getPrice() + " VND");
         holder.tvProductQuantity.setText("Số lượng: " + product.getQuantity());
+        holder.tvProductCategory.setText("Danh mục: " + product.getCategoryName());
         holder.tvProductStar.setText("Chất lượng: " + product.getStar() + " sao");
 
         ProductImageUtil.loadImage(holder.itemView.getContext(), product.getImage(), holder.imgProduct);
@@ -76,7 +77,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
     static class ProductViewHolder extends RecyclerView.ViewHolder {
         ImageView imgProduct, imgEdit, imgDelete, imgAddToCart;
-        TextView tvProductName, tvProductVolume, tvProductPrice, tvProductQuantity, tvProductStar;
+        TextView tvProductName, tvProductVolume, tvProductPrice, tvProductQuantity, tvProductCategory, tvProductStar;
 
         ProductViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -85,6 +86,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             tvProductVolume = itemView.findViewById(R.id.tvProductVolume);
             tvProductPrice = itemView.findViewById(R.id.tvProductPrice);
             tvProductQuantity = itemView.findViewById(R.id.tvProductQuantity);
+            tvProductCategory = itemView.findViewById(R.id.tvProductCategory);
             tvProductStar = itemView.findViewById(R.id.tvProductStar);
             imgEdit = itemView.findViewById(R.id.imgEdit);
             imgDelete = itemView.findViewById(R.id.imgDelete);

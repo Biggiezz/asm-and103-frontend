@@ -1,5 +1,10 @@
 package com.example.asm_and103_ph63816.model;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.annotations.SerializedName;
+
 public class Product {
     private String _id;
     private String name; // tên sản phẩm
@@ -9,6 +14,8 @@ public class Product {
     private String description; // đánh giá
     private double star; // số sao đánh giá
     private String image;
+    @SerializedName("id_category")
+    private JsonElement idCategory;
 
     public Product() {
     }
@@ -84,5 +91,35 @@ public class Product {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public String getCategoryId() {
+        if (idCategory == null || idCategory.isJsonNull()) {
+            return "";
+        }
+        if (idCategory.isJsonPrimitive()) {
+            return idCategory.getAsString();
+        }
+        if (idCategory.isJsonObject()) {
+            JsonObject categoryObject = idCategory.getAsJsonObject();
+            if (categoryObject.has("_id") && !categoryObject.get("_id").isJsonNull()) {
+                return categoryObject.get("_id").getAsString();
+            }
+        }
+        return "";
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.idCategory = new JsonPrimitive(categoryId);
+    }
+
+    public String getCategoryName() {
+        if (idCategory != null && idCategory.isJsonObject()) {
+            JsonObject categoryObject = idCategory.getAsJsonObject();
+            if (categoryObject.has("name") && !categoryObject.get("name").isJsonNull()) {
+                return categoryObject.get("name").getAsString();
+            }
+        }
+        return "Chưa có danh mục";
     }
 }

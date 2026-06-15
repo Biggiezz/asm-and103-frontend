@@ -45,6 +45,7 @@ public interface ApiServices {
             @Part("quantity") RequestBody quantity,
             @Part("description") RequestBody description,
             @Part("star") RequestBody star,
+            @Part("id_category") RequestBody idCategory,
             @Part MultipartBody.Part image
     );
 

@@ -10,8 +10,10 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +30,7 @@ import com.example.asm_and103_ph63816.R;
 import com.example.asm_and103_ph63816.adapter.ProductAdapter;
 import com.example.asm_and103_ph63816.handle.ItemProductHandle;
 import com.example.asm_and103_ph63816.model.Cart;
+import com.example.asm_and103_ph63816.model.Category;
 import com.example.asm_and103_ph63816.model.Product;
 import com.example.asm_and103_ph63816.model.Response;
 import com.example.asm_and103_ph63816.services.HttpRequest;
@@ -52,12 +55,13 @@ public class ProductActivity extends AppCompatActivity {
     private ProductAdapter adapter;
     private HttpRequest httpRequest;
     private RecyclerView recycleProductsAsm;
-    private ArrayList<Product> list = new ArrayList<>();
+    private final ArrayList<Product> list = new ArrayList<>();
+    private final ArrayList<Category> categoryList = new ArrayList<>();
     private FloatingActionButton fabAddProduct;
     private EditText edtSearch;
     private String imageProduct;
     private ImageView imgSelectedProduct, imgBack, imgCart;
-    private Handler handler = new Handler(Looper.getMainLooper());
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
 
     @Override
@@ -75,16 +79,26 @@ public class ProductActivity extends AppCompatActivity {
 
         httpRequest = new HttpRequest();
 
+        /// load list sản phẩm
         loadListProduct();
+        loadListCategory();
 
+        /// quay lại
         imgBack.setOnClickListener(v -> finish());
 
+        /// giỏ hàng
         imgCart.setOnClickListener(v -> {
             Intent intent = new Intent(this, CartActivity.class);
             startActivity(intent);
         });
 
+        /// nút thêm sản phẩm
         fabAddProduct.setOnClickListener(v -> {
+            if (categoryList.isEmpty()) {
+                loadListCategory();
+                Toast.makeText(this, "Chưa có danh mục để chọn", Toast.LENGTH_LONG).show();
+                return;
+            }
             imageProduct = null;
             View view = LayoutInflater.from(this)
                     .inflate(R.layout.activity_product_detail, null);
@@ -100,8 +114,10 @@ public class ProductActivity extends AppCompatActivity {
             TextInputEditText edtQuantity = view.findViewById(R.id.edtProductQuantity);
             TextInputEditText edtDescription = view.findViewById(R.id.edtProductDescription);
             TextInputEditText edtStar = view.findViewById(R.id.edtProductStar);
+            Spinner spCategory = view.findViewById(R.id.spCategory);
             MaterialButton btnAddProduct = view.findViewById(R.id.btnSaveProduct);
             MaterialButton btnCancel = view.findViewById(R.id.btnCancelProduct);
+            setupCategorySpinner(spCategory, "");
 
             imgProduct.setOnClickListener(v1 -> chooseImage(imgProduct));
 
@@ -112,9 +128,14 @@ public class ProductActivity extends AppCompatActivity {
                 String quantity = edtQuantity.getText().toString().trim();
                 String description = edtDescription.getText().toString().trim();
                 String star = edtStar.getText().toString().trim();
+                String categoryId = getSelectedCategoryId(spCategory);
                 if (productName.isEmpty() || volume.isEmpty() || price.isEmpty()
                         || quantity.isEmpty() || description.isEmpty() || star.isEmpty()) {
                     Toast.makeText(this, "Vui lòng không bỏ trống", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                if (categoryId.isEmpty()) {
+                    Toast.makeText(this, "Vui lòng chọn danh mục", Toast.LENGTH_LONG).show();
                     return;
                 }
                 if (imageProduct == null || imageProduct.trim().isEmpty()) {
@@ -133,6 +154,7 @@ public class ProductActivity extends AppCompatActivity {
                             createText(quantity),
                             createText(description),
                             createText(star),
+                            createText(categoryId),
                             createImagePart(imageProduct)
                     ).enqueue(addProductAPI);
                     dialog.dismiss();
@@ -217,6 +239,55 @@ public class ProductActivity extends AppCompatActivity {
         });
     }
 
+    private void loadListCategory() {
+        httpRequest.callAPI().getListCategory().enqueue(getListCategory);
+    }
+
+    private void setupCategorySpinner(Spinner spCategory, String selectedCategoryId) {
+        ArrayList<String> categoryNames = new ArrayList<>();
+        if (categoryList.isEmpty()) {
+            categoryNames.add("Chưa có danh mục");
+        } else {
+            for (Category category : categoryList) {
+                categoryNames.add(category.getName());
+            }
+        }
+
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                categoryNames
+        );
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spCategory.setAdapter(categoryAdapter);
+
+        int selectedPosition = getCategoryPosition(selectedCategoryId);
+        if (selectedPosition >= 0) {
+            spCategory.setSelection(selectedPosition);
+        }
+    }
+
+    private int getCategoryPosition(String categoryId) {
+        if (categoryId == null || categoryId.trim().isEmpty()) {
+            return -1;
+        }
+        for (int i = 0; i < categoryList.size(); i++) {
+            if (categoryId.equals(categoryList.get(i).getId())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private String getSelectedCategoryId(Spinner spCategory) {
+        int position = spCategory.getSelectedItemPosition();
+        if (position < 0 || position >= categoryList.size()) {
+            return "";
+        }
+        String categoryId = categoryList.get(position).getId();
+        return categoryId == null ? "" : categoryId;
+    }
+
     private void addToCart(Product product) {
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         Cart cart = new Cart(userId, product.get_id(), 1);
@@ -268,6 +339,7 @@ public class ProductActivity extends AppCompatActivity {
         TextInputEditText edtQuantity = view.findViewById(R.id.edtProductQuantity);
         TextInputEditText edtDescription = view.findViewById(R.id.edtProductDescription);
         TextInputEditText edtStar = view.findViewById(R.id.edtProductStar);
+        Spinner spCategory = view.findViewById(R.id.spCategory);
         MaterialButton btnUpdate = view.findViewById(R.id.btnSaveProduct);
         MaterialButton btnCancel = view.findViewById(R.id.btnCancelProduct);
 
@@ -278,6 +350,7 @@ public class ProductActivity extends AppCompatActivity {
         edtQuantity.setText(String.valueOf(product.getQuantity()));
         edtDescription.setText(product.getDescription());
         edtStar.setText(String.valueOf(product.getStar()));
+        setupCategorySpinner(spCategory, product.getCategoryId());
         ProductImageUtil.loadImage(this, imageProduct, imgProduct);
 
         imgProduct.setOnClickListener(v -> chooseImage(imgProduct));
@@ -290,9 +363,14 @@ public class ProductActivity extends AppCompatActivity {
             String quantity = edtQuantity.getText().toString().trim();
             String description = edtDescription.getText().toString().trim();
             String star = edtStar.getText().toString().trim();
+            String categoryId = getSelectedCategoryId(spCategory);
             if (productName.isEmpty() || volume.isEmpty() || price.isEmpty()
                     || quantity.isEmpty() || description.isEmpty() || star.isEmpty()) {
                 Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_LONG).show();
+                return;
+            }
+            if (categoryId.isEmpty()) {
+                Toast.makeText(this, "Vui lòng chọn danh mục", Toast.LENGTH_LONG).show();
                 return;
             }
             double volumeDouble;
@@ -310,6 +388,7 @@ public class ProductActivity extends AppCompatActivity {
             }
             Product productUpdate = new Product(productName, volumeDouble, priceDouble, quantityInt, description, starDouble);
             productUpdate.setImage(imageProduct);
+            productUpdate.setCategoryId(categoryId);
             httpRequest.callAPI().updateProductById(product.get_id(), productUpdate).enqueue(updateProductAPI);
             dialog.dismiss();
         });
@@ -380,11 +459,7 @@ public class ProductActivity extends AppCompatActivity {
     Callback<Response<Product>> updateProductAPI = new Callback<Response<Product>>() {
         @Override
         public void onResponse(Call<Response<Product>> call, retrofit2.Response<Response<Product>> response) {
-            if (!response.isSuccessful() || response.body() == null) {
-                Toast.makeText(ProductActivity.this, "Cập nhật thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
-                return;
-            }
-            if (response.body().getStatus() == 200) {
+            if (response.isSuccessful() && response.body().getStatus() == 200) {
                 Toast.makeText(ProductActivity.this, "Cập nhật thành công", Toast.LENGTH_LONG).show();
                 fetchProductList();
             } else {
@@ -400,15 +475,11 @@ public class ProductActivity extends AppCompatActivity {
     Callback<Response<Product>> addProductAPI = new Callback<Response<Product>>() {
         @Override
         public void onResponse(Call<Response<Product>> call, retrofit2.Response<Response<Product>> response) {
-            if (!response.isSuccessful() || response.body() == null) {
-                Toast.makeText(ProductActivity.this, "Thêm thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
-                return;
-            }
-            if (response.body().getStatus() == 200) {
+            if (response.isSuccessful() && response.body().getStatus() == 200) {
                 Toast.makeText(ProductActivity.this, "Thêm sản phẩm thành công", Toast.LENGTH_LONG).show();
                 fetchProductList();
             } else {
-                Toast.makeText(ProductActivity.this, "Lỗi, Thêm sản phẩm thất bại", Toast.LENGTH_LONG).show();
+                Toast.makeText(ProductActivity.this, "Thêm sản phẩm thất bại", Toast.LENGTH_LONG).show();
             }
         }
 
@@ -421,11 +492,7 @@ public class ProductActivity extends AppCompatActivity {
     Callback<Response<Product>> deleteProductAPI = new Callback<Response<Product>>() {
         @Override
         public void onResponse(Call<Response<Product>> call, retrofit2.Response<Response<Product>> response) {
-            if (!response.isSuccessful() || response.body() == null) {
-                Toast.makeText(ProductActivity.this, "Xóa thất bại: HTTP " + response.code(), Toast.LENGTH_LONG).show();
-                return;
-            }
-            if (response.body().getStatus() == 200) {
+            if (response.isSuccessful() && response.body().getStatus() == 200) {
                 Toast.makeText(ProductActivity.this, "Xóa thành công", Toast.LENGTH_LONG).show();
                 fetchProductList();
             } else {
@@ -442,15 +509,10 @@ public class ProductActivity extends AppCompatActivity {
             new Callback<Response<ArrayList<Product>>>() {
                 @Override
                 public void onResponse(Call<Response<ArrayList<Product>>> call, retrofit2.Response<Response<ArrayList<Product>>> response) {
-                    if (!response.isSuccessful() || response.body() == null) {
-                        Toast.makeText(ProductActivity.this, "Không lấy được sản phẩm: HTTP " + response.code(), Toast.LENGTH_LONG).show();
-                        Log.e(">>> GetListProduct", "HTTP error: " + response.code());
-                        return;
-                    }
-                    if (response.body().getStatus() == 200) {
+                    if (response.isSuccessful() && response.body().getStatus() == 200) {
                         adapter.setData(response.body().getData());
                     } else {
-                        Toast.makeText(ProductActivity.this, response.body().getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(ProductActivity.this, "Không lấy được sản phẩm", Toast.LENGTH_LONG).show();
                     }
                 }
 
@@ -458,6 +520,26 @@ public class ProductActivity extends AppCompatActivity {
                 public void onFailure(Call<Response<ArrayList<Product>>> call, Throwable throwable) {
                     Log.d(">>> GetListProduct", "onFailure: " + throwable.getMessage());
                     Toast.makeText(ProductActivity.this, "Lỗi API: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            };
+
+    private final Callback<Response<ArrayList<Category>>> getListCategory =
+            new Callback<Response<ArrayList<Category>>>() {
+                @Override
+                public void onResponse(Call<Response<ArrayList<Category>>> call, retrofit2.Response<Response<ArrayList<Category>>> response) {
+                    if (response.isSuccessful() && response.body().getStatus() == 200) {
+                        categoryList.clear();
+                        if (response.body().getData() != null) {
+                            categoryList.addAll(response.body().getData());
+                        }
+                    } else {
+                        Toast.makeText(ProductActivity.this, "Không lấy được danh mục", Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Response<ArrayList<Category>>> call, Throwable throwable) {
+                    Toast.makeText(ProductActivity.this, "Lỗi API danh mục: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
                 }
             };
 }
